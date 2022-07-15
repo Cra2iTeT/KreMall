@@ -13,6 +13,9 @@
         <module>user</module>
         <module>merchant</module>
         <module>commodity</module>
+        <module>starter</module>
+        <module>eureka-7001</module>
+        <module>eureka-7002</module>
     </modules>
 
     <properties>
@@ -64,11 +67,6 @@
                 <version>${springboot.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-devtools</artifactId>
-                <version>${springboot.version}</version>
             </dependency>
             <!--数据库-->
             <dependency>

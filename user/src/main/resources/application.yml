@@ -1,5 +1,5 @@
 server:
-  port: 13330
+  port: 13401
 
 spring:
   mvc:
@@ -34,10 +34,18 @@ spring:
   jackson:
     default-property-inclusion: non_null
 
-mybatis:
-  mapper-locations: classpath:mapper/*Mapper.xml
-  type-aliases-package: com.kdfus.domain.entity
+eureka:
+  client:
+    service-url:
+      defaultZone: http://127.0.0.1:7001/eureka/,http://127.0.0.1:7002/eureka/
+
+  instance:
+    instance-id: user-13401
+
 mybatis-plus:
+  type-aliases-package: com.kdfus.domain.*,; # 别名扫描包
+  configuration:
+      log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:
     db-config:
       logic-delete-field: isDeleted

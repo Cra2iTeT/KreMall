@@ -1,5 +1,6 @@
 package com.kdfus.controller;
 
+import com.kdfus.domain.dto.UpdatePwdDTO;
 import com.kdfus.system.Constants;
 import com.kdfus.system.ServiceResultEnum;
 import com.kdfus.domain.dto.LoginDTO;
@@ -12,6 +13,8 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -96,12 +99,17 @@ public class UserController {
 
     @PutMapping("/update")
     @ApiOperation(value = "修改个人密码接口", notes = "")
-    public Result<String> update(HttpServletRequest request, String oldPasswordMd5,
-                                 String newPasswordMd5, String confirmPasswordMd5) {
+    public Result<String> update(HttpServletRequest request, @RequestBody UpdatePwdDTO updatePwdDTO) {
         String token = request.getHeader("authorization");
-        log.info("修改密码接口 {},{},{}", oldPasswordMd5, newPasswordMd5, confirmPasswordMd5);
 
-        String updateResult = userService.update(token, oldPasswordMd5, newPasswordMd5, confirmPasswordMd5);
+        log.info("------");
+        log.info("修改密码接口：");
+        log.info("修改密码接口\t旧密码：{},新密码：{},确认密码：{}", updatePwdDTO.getOldPasswordMd5(),
+                updatePwdDTO.getNewPasswordMd5(), updatePwdDTO.getConfirmPasswordMd5());
+        log.info("------");
+
+        String updateResult = userService.update(token, updatePwdDTO.getOldPasswordMd5(),
+                updatePwdDTO.getNewPasswordMd5(), updatePwdDTO.getConfirmPasswordMd5());
 
         if (updateResult == null) {
             return ResultGenerator.genSuccessResult();
