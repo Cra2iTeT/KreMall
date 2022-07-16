@@ -7,14 +7,12 @@ import com.kdfus.domain.dto.LoginDTO;
 import com.kdfus.domain.dto.RegistryDTO;
 import com.kdfus.domain.vo.Result;
 import com.kdfus.service.UserService;
-import com.kdfus.util.NumberUtil;
+import com.kdfus.util.NumberUtils;
 import com.kdfus.util.ResultGenerator;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,7 +26,6 @@ import javax.validation.Valid;
  */
 @RestController
 @Slf4j
-@RequestMapping(("/user"))
 @Api(value = "v1", tags = "2.商城用户操作相关接口")
 public class UserController {
     @Autowired
@@ -37,19 +34,20 @@ public class UserController {
     @PostMapping("/login")
     @ApiOperation(value = "登录接口", notes = "返回token")
     public Result<String> login(@RequestBody @Valid LoginDTO loginDTO) {
-        if (!NumberUtil.isPhoneInvalid(loginDTO.getAccountId())) {
-            return ResultGenerator.genFailResult(ServiceResultEnum.LOGIN_ACCOUNT_ID_VALID.getResult());
-        }
-        log.info("登录接口收到的信息 => " + loginDTO);
-        String loginResult = userService.login(loginDTO);
-
-        if (!StringUtils.isEmpty(loginResult) && loginResult.length() == Constants.TOKEN_LENGTH) {
-            Result result = ResultGenerator.genSuccessResult();
-            result.setData(loginResult);
-            return result;
-        }
+//        if (!NumberUtils.isPhoneInvalid(loginDTO.getAccountId())) {
+//            return ResultGenerator.genFailResult(ServiceResultEnum.LOGIN_ACCOUNT_ID_VALID.getResult());
+//        }
+//        log.info("登录接口收到的信息 => " + loginDTO);
+//        String loginResult = userService.login(loginDTO);
+//
+//        if (!StringUtils.isEmpty(loginResult) && loginResult.length() == Constants.TOKEN_LENGTH) {
+//            Result result = ResultGenerator.genSuccessResult();
+//            result.setData(loginResult);
+//            return result;
+//        }
+        System.out.println(loginDTO);
         //登录失败
-        return ResultGenerator.genFailResult(loginResult);
+        return ResultGenerator.genFailResult("loginResult");
     }
 
     @PostMapping("/logout")
@@ -68,7 +66,7 @@ public class UserController {
     @ApiOperation(value = "注册接口", notes = "")
     public Result<String> registry(@RequestBody @Valid RegistryDTO registryDTO) {
         log.info("注册接口收到的手机号 => " + registryDTO.toString());
-        if (!NumberUtil.isPhoneInvalid(registryDTO.getAccountId())) {
+        if (!NumberUtils.isPhoneInvalid(registryDTO.getAccountId())) {
             return ResultGenerator.genFailResult(ServiceResultEnum.LOGIN_ACCOUNT_ID_VALID.getResult());
         }
         String registryResult = userService.registry(registryDTO);

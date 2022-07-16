@@ -7,7 +7,7 @@ import java.util.Date;
  * @author Cra2iTeT
  * @date 2022/5/31 22:19
  */
-public class TimeUtil {
+public class TimeUtils {
     private final static String DEFAULT_DATE_FORMAT = "yyyy-MM-dd";
 
     /**

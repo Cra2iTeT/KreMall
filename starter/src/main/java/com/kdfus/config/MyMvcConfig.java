@@ -13,17 +13,17 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class MyMvcConfig implements WebMvcConfigurer {
 
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        // 登录验证 拦截
-        registry.addInterceptor(new LoginInterceptor())
-                .excludePathPatterns(
-                        "/user/login",
-                        "/user/registry",
-                        "/admin/login",
-                        "/admin/registry",
-                        "/merchant/login",
-                        "/merchant/registry"
-                );
-    }
+//    @Override
+//    public void addInterceptors(InterceptorRegistry registry) {
+//        // 登录验证 拦截
+//        registry.addInterceptor(new LoginInterceptor())
+//                .excludePathPatterns(
+//                        "/user/login",
+//                        "/user/registry",
+//                        "/admin/login",
+//                        "/admin/registry",
+//                        "/merchant/login",
+//                        "/merchant/registry"
+//                );
+//    }
 }

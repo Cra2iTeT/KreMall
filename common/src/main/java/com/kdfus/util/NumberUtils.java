@@ -11,9 +11,9 @@ import java.util.regex.Pattern;
  * @date 2022/5/31 21:24
  */
 
-public class NumberUtil {
+public class NumberUtils {
 
-    private NumberUtil() {
+    private NumberUtils() {
     }
 
     /**

@@ -13,9 +13,9 @@ import com.kdfus.domain.entity.user.User;
 import com.kdfus.domain.vo.UserVO;
 import com.kdfus.mapper.UserMapper;
 import com.kdfus.service.UserService;
-import com.kdfus.util.MD5Util;
-import com.kdfus.util.NumberUtil;
-import com.kdfus.util.UploadUtil;
+import com.kdfus.util.MD5Utils;
+import com.kdfus.util.NumberUtils;
+import com.kdfus.util.UploadUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -55,12 +55,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         wrapper.eq(User::getAccountId, accountId)
-                .eq(User::getPasswordMd5, MD5Util.MD5Encode(passwordMd5, "UTF-8"));
+                .eq(User::getPasswordMd5, MD5Utils.MD5Encode(passwordMd5, "UTF-8"));
         List<User> userList = list(wrapper);
 
         if (userList != null && userList.size() == 1) {
             User user = userList.get(0);
-            String token = NumberUtil.genToken(user.getId());
+            String token = NumberUtils.genToken(user.getId());
             UserVO userVO = BeanUtil.copyProperties(user, UserVO.class);
             // 映射多端登录信息
             // 先查询当前有几台设备登录
@@ -118,18 +118,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         wrapper.eq(User::getAccountId, accountId)
-                .eq(User::getPasswordMd5, MD5Util.MD5Encode(passwordMd5, "UTF-8"));
+                .eq(User::getPasswordMd5, MD5Utils.MD5Encode(passwordMd5, "UTF-8"));
         List<User> userList = list(wrapper);
         if (userList.size() == 1) {
             return ServiceResultEnum.EXISTED.getResult();
         }
         User user = new User();
-        Long id = Long.valueOf(NumberUtil.genNo());
-        String token = NumberUtil.genToken(id);
+        Long id = Long.valueOf(NumberUtils.genNo());
+        String token = NumberUtils.genToken(id);
         user.setId(id);
         user.setNickName(USER_NICK_NAME_PREFIX + RandomUtil.randomString(10));
         user.setAccountId(registryDTO.getAccountId());
-        passwordMd5 = MD5Util.MD5Encode(passwordMd5, "UTF-8");
+        passwordMd5 = MD5Utils.MD5Encode(passwordMd5, "UTF-8");
         user.setPasswordMd5(passwordMd5);
 
         if (save(user)) {
@@ -212,7 +212,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         UserVO userVO = JSON.parseObject(userVOJSON, UserVO.class);
 
-        String uploadResult = UploadUtil
+        String uploadResult = UploadUtils
                 .uploadFile(file, FILE_USER_UPLOAD_DIC + userVO.getAccountId() + "\\");
         if (uploadResult != null) {
             userVO.setUserImg(uploadResult);

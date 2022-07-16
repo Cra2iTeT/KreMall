@@ -15,15 +15,15 @@ import java.io.IOException;
  * 文件上传工具类
  */
 @Slf4j
-public class UploadUtil {
+public class UploadUtils {
     public static String uploadFile(MultipartFile file, String parentPath) {
         String fileName = file.getOriginalFilename();
         String suffixName = fileName.substring(fileName.lastIndexOf("."));
         //生成文件名称通用方法
         StringBuilder tempName = new StringBuilder();
-        tempName.append(NumberUtil.genNo()).append(suffixName);
+        tempName.append(NumberUtils.genNo()).append(suffixName);
         String newFileName = tempName.toString();
-        parentPath = parentPath + TimeUtil.getTimeNow("yyyyMMdd") + "\\";
+        parentPath = parentPath + TimeUtils.getTimeNow("yyyyMMdd") + "\\";
         File fileDirectory = new File(parentPath);
         //创建文件
         File destFile = new File(parentPath + newFileName);

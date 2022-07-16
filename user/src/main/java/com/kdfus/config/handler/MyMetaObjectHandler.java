@@ -2,11 +2,9 @@ package com.kdfus.config.handler;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.kdfus.system.Constants;
-import com.kdfus.util.TimeUtil;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
