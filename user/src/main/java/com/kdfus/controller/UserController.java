@@ -26,7 +26,7 @@ import javax.validation.Valid;
  */
 @RestController
 @Slf4j
-@Api(value = "v1", tags = "2.商城用户操作相关接口")
+@Api(value = "v1", tags = "1.商城用户信息操作相关接口")
 public class UserController {
     @Autowired
     private UserService userService;
@@ -34,17 +34,17 @@ public class UserController {
     @PostMapping("/login")
     @ApiOperation(value = "登录接口", notes = "返回token")
     public Result<String> login(@RequestBody @Valid LoginDTO loginDTO) {
-//        if (!NumberUtils.isPhoneInvalid(loginDTO.getAccountId())) {
-//            return ResultGenerator.genFailResult(ServiceResultEnum.LOGIN_ACCOUNT_ID_VALID.getResult());
-//        }
-//        log.info("登录接口收到的信息 => " + loginDTO);
-//        String loginResult = userService.login(loginDTO);
-//
-//        if (!StringUtils.isEmpty(loginResult) && loginResult.length() == Constants.TOKEN_LENGTH) {
-//            Result result = ResultGenerator.genSuccessResult();
-//            result.setData(loginResult);
-//            return result;
-//        }
+        if (!NumberUtils.isPhoneInvalid(loginDTO.getAccountId())) {
+            return ResultGenerator.genFailResult(ServiceResultEnum.LOGIN_ACCOUNT_ID_VALID.getResult());
+        }
+        log.info("登录接口收到的信息 => " + loginDTO);
+        String loginResult = userService.login(loginDTO);
+
+        if (!StringUtils.isEmpty(loginResult) && loginResult.length() == Constants.TOKEN_LENGTH) {
+            Result result = ResultGenerator.genSuccessResult();
+            result.setData(loginResult);
+            return result;
+        }
         System.out.println(loginDTO);
         //登录失败
         return ResultGenerator.genFailResult("loginResult");

@@ -1,4 +1,4 @@
-package com.kdfus.domain.vo;
+package com.kdfus.domain.vo.admin;
 
 import lombok.Data;
 

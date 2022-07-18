@@ -14,4 +14,8 @@ public class RedisConstants {
     public static final Long LOGIN_USER_TOKEN_TTL = 4320L;
     public static final Long LOGIN_USER_INFO_TTL = 4320L;
     public static final Long LOGIN_USER_TOKEN_DELAY_TTL = 360L;
+
+    public static final String USER_ADDRESS_INFO_KEY = "User:Address:Info:";
+    public static final Long USER_ADDRESS_INFO_TTL = 4320L;
+    public static final Long USER_ADDRESS_INFO_DELAY_TTL = 360L;
 }

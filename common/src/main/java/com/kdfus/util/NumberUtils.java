@@ -58,8 +58,13 @@ public class NumberUtils {
         return b.toString();
     }
 
+    public static Long genId() {
+        return System.currentTimeMillis() + genRandomNum(4);
+    }
+
     /**
      * 生成32位随机token
+     *
      * @param id
      * @return
      */

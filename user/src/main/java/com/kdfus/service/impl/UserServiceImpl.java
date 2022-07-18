@@ -10,7 +10,7 @@ import com.kdfus.system.ServiceResultEnum;
 import com.kdfus.domain.dto.LoginDTO;
 import com.kdfus.domain.dto.RegistryDTO;
 import com.kdfus.domain.entity.user.User;
-import com.kdfus.domain.vo.UserVO;
+import com.kdfus.domain.vo.user.UserVO;
 import com.kdfus.mapper.UserMapper;
 import com.kdfus.service.UserService;
 import com.kdfus.util.MD5Utils;
@@ -124,7 +124,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return ServiceResultEnum.EXISTED.getResult();
         }
         User user = new User();
-        Long id = Long.valueOf(NumberUtils.genNo());
+        Long id = NumberUtils.genId();
         String token = NumberUtils.genToken(id);
         user.setId(id);
         user.setNickName(USER_NICK_NAME_PREFIX + RandomUtil.randomString(10));

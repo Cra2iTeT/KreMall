@@ -1,10 +1,9 @@
-package com.kdfus.domain.vo;
+package com.kdfus.domain.vo.user;
 
 import lombok.Data;
 
 /**
  * @author Cra2iTeT
- * @version 1.0
  * @date 2022/6/25 20:28
  */
 @Data
