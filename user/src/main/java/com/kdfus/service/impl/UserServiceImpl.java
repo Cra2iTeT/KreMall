@@ -15,6 +15,7 @@ import com.kdfus.mapper.UserMapper;
 import com.kdfus.service.UserService;
 import com.kdfus.util.MD5Utils;
 import com.kdfus.util.NumberUtils;
+import com.kdfus.util.TokenUtils;
 import com.kdfus.util.UploadUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,11 +52,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String passwordMd5 = loginDTO.getPasswordMd5();
 
         if (passwordMd5 == null) {
-            return ServiceResultEnum.LOGIN_NULL.getResult();
+            return ServiceResultEnum.LOGIN_FORM_NULL.getResult();
         }
 
-        wrapper.eq(User::getAccountId, accountId)
-                .eq(User::getPasswordMd5, MD5Utils.MD5Encode(passwordMd5, "UTF-8"));
+        wrapper.eq(User::getAccountId, accountId).eq(User::getPasswordMd5, MD5Utils.MD5Encode(passwordMd5, "UTF-8"));
         List<User> userList = list(wrapper);
 
         if (userList != null && userList.size() == 1) {
@@ -64,7 +64,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             UserVO userVO = BeanUtil.copyProperties(user, UserVO.class);
             // 映射多端登录信息
             // 先查询当前有几台设备登录
-            Set<String> keys = stringRedisTemplate.keys(LOGIN_USER_INFO_KEY + userVO.getAccountId() + "*");
+            Set<String> keys = stringRedisTemplate.keys(LOGIN_USER_MAPPING_KEY + userVO.getAccountId() + "*");
             if (keys != null && keys.size() == 3) {
                 Object[] array = keys.toArray();
                 Long[] expire = new Long[3];
@@ -79,15 +79,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
                 tempIndex = minExpire < expire[2] ? tempIndex : 2;
                 // 删除最不常用的设备登录信息
-                stringRedisTemplate.delete(LOGIN_USER_INFO_KEY + userVO.getAccountId() + ":" + token);
+                stringRedisTemplate.delete(LOGIN_USER_MAPPING_KEY + userVO.getAccountId() + ":" + token);
                 stringRedisTemplate.delete(LOGIN_USER_TOKEN_KEY + array[tempIndex].toString());
             }
             // 云端存储token
-            stringRedisTemplate.opsForValue()
-                    .set(LOGIN_USER_TOKEN_KEY + token, JSON.toJSONString(userVO), LOGIN_USER_TOKEN_TTL, TimeUnit.MINUTES);
+            stringRedisTemplate.opsForValue().set(LOGIN_USER_TOKEN_KEY + token, JSON.toJSONString(userVO), LOGIN_USER_TOKEN_TTL, TimeUnit.MINUTES);
             stringRedisTemplate.opsForValue()
                     // 映射token与登录设备关系
-                    .set(LOGIN_USER_INFO_KEY + userVO.getAccountId() + ":" + token, "", LOGIN_USER_INFO_TTL, TimeUnit.MINUTES);
+                    .set(LOGIN_USER_MAPPING_KEY + userVO.getAccountId() + ":" + token, "", LOGIN_USER_INFO_TTL, TimeUnit.MINUTES);
             return token;
         }
         return ServiceResultEnum.LOGIN_ERROR.getResult();
@@ -95,8 +94,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public Boolean logout(String token) {
-        return Boolean.TRUE.equals(stringRedisTemplate.delete(LOGIN_USER_TOKEN_KEY))
-                && Boolean.TRUE.equals(stringRedisTemplate.delete(LOGIN_USER_INFO_KEY));
+        UserVO userVO = TokenUtils.verify(token, stringRedisTemplate);
+        return Boolean.TRUE.equals(stringRedisTemplate.delete(LOGIN_USER_TOKEN_KEY + token))
+                && Boolean.TRUE.equals(stringRedisTemplate.delete(LOGIN_USER_MAPPING_KEY
+                + userVO.getAccountId() + ":" + token));
     }
 
     @Override
@@ -112,21 +113,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         // 先从映射关系查询是否已经存在账号
-        String userInfo = stringRedisTemplate.opsForValue().get(LOGIN_USER_INFO_KEY + accountId);
+        String userInfo = stringRedisTemplate.opsForValue().get(LOGIN_USER_MAPPING_KEY + accountId);
         if (userInfo != null) {
             return ServiceResultEnum.EXISTED.getResult();
         }
 
-        wrapper.eq(User::getAccountId, accountId)
-                .eq(User::getPasswordMd5, MD5Utils.MD5Encode(passwordMd5, "UTF-8"));
+        wrapper.eq(User::getAccountId, accountId).eq(User::getPasswordMd5, MD5Utils.MD5Encode(passwordMd5, "UTF-8"));
         List<User> userList = list(wrapper);
         if (userList.size() == 1) {
             return ServiceResultEnum.EXISTED.getResult();
         }
         User user = new User();
-        Long id = NumberUtils.genId();
-        String token = NumberUtils.genToken(id);
-        user.setId(id);
+        user.setId(NumberUtils.genId());
         user.setNickName(USER_NICK_NAME_PREFIX + RandomUtil.randomString(10));
         user.setAccountId(registryDTO.getAccountId());
         passwordMd5 = MD5Utils.MD5Encode(passwordMd5, "UTF-8");
@@ -141,25 +139,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public String update(String token, String nickName) {
+        UserVO userVO = TokenUtils.verify(token, stringRedisTemplate);
         String key = LOGIN_USER_TOKEN_KEY + token;
-        String userVOJSON = stringRedisTemplate.opsForValue().get(key);
         // 避免token恰好过期
-        if (userVOJSON == null) {
-            return ServiceResultEnum.UPDATE_ERROR.getResult();
+        if (userVO == null) {
+            return ServiceResultEnum.LOGIN_NULL.getResult();
         }
-        UserVO userVO = JSON.parseObject(userVOJSON, UserVO.class);
         userVO.setNickName(nickName);
 
         LambdaUpdateWrapper<User> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.eq(User::getId, userVO.getId())
-                .set(User::getNickName, userVO.getNickName())
-                .last("for update");
+        wrapper.eq(User::getId, userVO.getId()).set(User::getNickName, userVO.getNickName()).last("for update");
         // 添加行锁，避免多线程修改问题
         if (update(wrapper)) {
             // 连同映射关系的ttl一同修改，避免映射过期token未过期导致token信息积累
             Long expire = stringRedisTemplate.opsForValue().getOperations().getExpire(key);
             stringRedisTemplate.opsForValue().set(key, JSON.toJSONString(userVO), expire, TimeUnit.MINUTES);
-            stringRedisTemplate.opsForValue().set(LOGIN_USER_INFO_KEY + userVO.getAccountId(), "", expire, TimeUnit.MINUTES);
+            stringRedisTemplate.opsForValue().set(LOGIN_USER_MAPPING_KEY + userVO.getAccountId(), "", expire, TimeUnit.MINUTES);
             return null;
         }
         return ServiceResultEnum.UPDATE_ERROR.getResult();
@@ -177,27 +172,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         String key = LOGIN_USER_TOKEN_KEY + token;
-        String userVOJSON = stringRedisTemplate.opsForValue().get(key);
+        UserVO userVO = TokenUtils.verify(token, stringRedisTemplate);
         // 避免token恰好过期
-        if (userVOJSON == null) {
-            return ServiceResultEnum.UPDATE_ERROR.getResult();
+        if (userVO == null) {
+            return ServiceResultEnum.LOGIN_NULL.getResult();
         }
-        UserVO userVO = JSON.parseObject(userVOJSON, UserVO.class);
 
         LambdaUpdateWrapper<User> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.eq(User::getId, userVO.getId())
-                .set(User::getPasswordMd5, newPasswordMd5)
-                .last("for update");
+        wrapper.eq(User::getId, userVO.getId()).set(User::getPasswordMd5, newPasswordMd5).last("for update");
 
         if (update(wrapper)) {
             // 踢所有用户下线
-            Set<String> keys = stringRedisTemplate.keys(LOGIN_USER_INFO_KEY + userVO.getAccountId() + "*");
+            Set<String> keys = stringRedisTemplate.keys(LOGIN_USER_MAPPING_KEY + userVO.getAccountId() + "*");
             Object[] array = keys.toArray();
             // 先删除token
             for (Object o : array) {
                 stringRedisTemplate.delete(LOGIN_USER_TOKEN_KEY + o);
             }
-            stringRedisTemplate.delete(LOGIN_USER_INFO_KEY + userVO.getAccountId());
+            stringRedisTemplate.delete(LOGIN_USER_MAPPING_KEY + userVO.getAccountId());
             return null;
         }
         return ServiceResultEnum.UPDATE_ERROR.getResult();
@@ -205,20 +197,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public String update(String token, MultipartFile file) {
-        String userVOJSON = stringRedisTemplate.opsForValue().get(LOGIN_USER_TOKEN_KEY + token);
-        // 避免token恰好过期
-        if (userVOJSON == null) {
-            return ServiceResultEnum.UPDATE_ERROR.getResult();
-        }
-        UserVO userVO = JSON.parseObject(userVOJSON, UserVO.class);
+        UserVO userVO = TokenUtils.verify(token, stringRedisTemplate);
 
-        String uploadResult = UploadUtils
-                .uploadFile(file, FILE_USER_UPLOAD_DIC + userVO.getAccountId() + "\\");
+        String uploadResult = UploadUtils.uploadFile(file, FILE_USER_UPLOAD_DIC + userVO.getAccountId() + "\\");
         if (uploadResult != null) {
             userVO.setUserImg(uploadResult);
             LambdaUpdateWrapper<User> wrapper = new LambdaUpdateWrapper<>();
-            wrapper.eq(User::getId, userVO.getId())
-                    .set(User::getUserImg, userVO.getUserImg());
+            wrapper.eq(User::getId, userVO.getId()).set(User::getUserImg, userVO.getUserImg());
             if (update(wrapper)) {
                 return null;
             }

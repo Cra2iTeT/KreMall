@@ -4,6 +4,7 @@ import com.kdfus.domain.dto.user.AddressDTO;
 import com.kdfus.domain.vo.Result;
 import com.kdfus.domain.vo.user.AddressVO;
 import com.kdfus.service.AddressService;
+import com.kdfus.system.ServiceResultEnum;
 import com.kdfus.util.ResultGenerator;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
@@ -32,8 +33,8 @@ public class AddressController {
      * @return
      */
     @PostMapping("/address")
-    public Result<String> add(@RequestBody @Valid AddressDTO addressDTO) {
-        String addResult = addressService.add(addressDTO);
+    public Result<String> add(HttpServletRequest request, @RequestBody @Valid AddressDTO addressDTO) {
+        String addResult = addressService.save(request.getHeader("authorization"), addressDTO);
         if (addResult == null) {
             return ResultGenerator.genSuccessResult();
         }
@@ -47,14 +48,24 @@ public class AddressController {
      * @return
      */
     @PutMapping("/address")
-    public Result<String> update(@RequestBody @Valid AddressDTO addressDTO) {
-        String updateResult = addressService.update(addressDTO);
+    public Result<String> update(HttpServletRequest request, @RequestBody @Valid AddressDTO addressDTO) {
+        String token = request.getHeader("authorization");
+        String updateResult = addressService.update(token, addressDTO);
         if (updateResult == null) {
             return ResultGenerator.genSuccessResult();
         }
         return ResultGenerator.genFailResult(updateResult);
     }
 
+    @PutMapping("/default")
+    public Result<String> update(HttpServletRequest request, @Valid Long id) {
+        String token = request.getHeader("authorization");
+        String updateResult = addressService.update(token, id);
+        if (updateResult == null) {
+            return ResultGenerator.genSuccessResult();
+        }
+        return ResultGenerator.genFailResult(updateResult);
+    }
 
     /**
      * 获取默认地址
@@ -64,7 +75,11 @@ public class AddressController {
      */
     @GetMapping("/default")
     public Result<AddressVO> getDefault(HttpServletRequest request) {
-        AddressVO addressVO = addressService.getDefault(request);
-        return null;
+        AddressVO addressVO = addressService.getDefault(request.getHeader("authorization"));
+        if (addressVO != null) {
+            return ResultGenerator.genSuccessResult(addressVO);
+        }
+        // 说明没有默认地址，前端这个情形应该是在下单的时候，显示为空就行，提醒用户填收货地址，不需要弹出错误信息
+        return ResultGenerator.genFailResult(ServiceResultEnum.DATE_NULL.getResult());
     }
 }

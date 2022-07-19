@@ -11,7 +11,11 @@ public enum ServiceResultEnum {
 
     EXISTED("已存在！"),
 
-    UPDATE_ERROR("信息修改失败"),
+    OPERATE_ERROR("操作失败"),
+
+    UPDATE_ERROR("修改失败"),
+
+    DATE_NULL("数据空"),
 
     PASSWORD_DIFFERENT("两次密码不一致！"),
 
@@ -27,7 +31,9 @@ public enum ServiceResultEnum {
 
     LOGOUT_ERROR("登出失败"),
 
-    LOGIN_NULL("账号、密码不允许为空！");
+    LOGIN_NULL("未登录"),
+
+    LOGIN_FORM_NULL("账号、密码不允许为空！");
 
     private String result;
 

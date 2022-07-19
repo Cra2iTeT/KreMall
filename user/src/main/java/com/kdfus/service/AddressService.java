@@ -12,9 +12,12 @@ import javax.servlet.http.HttpServletRequest;
  * @date 2022/7/18 15:53
  */
 public interface AddressService extends IService<Address> {
-    String add(AddressDTO addressDTO);
 
-    String update(AddressDTO addressDTO);
+    AddressVO getDefault(String token);
 
-    AddressVO getDefault(HttpServletRequest request);
+    String update(String token, AddressDTO addressDTO);
+
+    String save(String token, AddressDTO addressDTO);
+
+    String update(String token, Long id);
 }
