@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.util.List;
 
 /**
  * @author Cra2iTeT
@@ -33,7 +34,7 @@ public class AddressController {
      * @return
      */
     @PostMapping("/address")
-    public Result<String> add(HttpServletRequest request, @RequestBody @Valid AddressDTO addressDTO) {
+    public Result<String> save(HttpServletRequest request, @RequestBody @Valid AddressDTO addressDTO) {
         String addResult = addressService.save(request.getHeader("authorization"), addressDTO);
         if (addResult == null) {
             return ResultGenerator.genSuccessResult();
@@ -57,6 +58,13 @@ public class AddressController {
         return ResultGenerator.genFailResult(updateResult);
     }
 
+    /**
+     * 更改默认地址
+     *
+     * @param request
+     * @param id
+     * @return
+     */
     @PutMapping("/default")
     public Result<String> update(HttpServletRequest request, @Valid Long id) {
         String token = request.getHeader("authorization");
@@ -81,5 +89,35 @@ public class AddressController {
         }
         // 说明没有默认地址，前端这个情形应该是在下单的时候，显示为空就行，提醒用户填收货地址，不需要弹出错误信息
         return ResultGenerator.genFailResult(ServiceResultEnum.DATE_NULL.getResult());
+    }
+
+    /**
+     * 获取收货地址列表
+     *
+     * @param request
+     * @return
+     */
+    @GetMapping("/address")
+    public Result<List<AddressVO>> getList(HttpServletRequest request) {
+        List<AddressVO> addressVOList = addressService.getList(request.getHeader("authorization"));
+        if (addressVOList != null) {
+            return ResultGenerator.genSuccessResult(addressVOList);
+        }
+        return ResultGenerator.genFailResult(ServiceResultEnum.DATE_NULL.getResult());
+    }
+
+    /**
+     * 逻辑删除收获地址
+     *
+     * @param id
+     * @return
+     */
+    @PutMapping("/delete")
+    public Result<String> delete(Long id) {
+        String delResult = addressService.delete(id);
+        if (delResult == null) {
+            return ResultGenerator.genSuccessResult();
+        }
+        return ResultGenerator.genFailResult(delResult);
     }
 }

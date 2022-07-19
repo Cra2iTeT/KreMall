@@ -5,7 +5,7 @@ import com.kdfus.domain.dto.user.AddressDTO;
 import com.kdfus.domain.entity.user.Address;
 import com.kdfus.domain.vo.user.AddressVO;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * @author Cra2iTeT
@@ -20,4 +20,8 @@ public interface AddressService extends IService<Address> {
     String save(String token, AddressDTO addressDTO);
 
     String update(String token, Long id);
+
+    List<AddressVO> getList(String token);
+
+    String delete( Long id);
 }

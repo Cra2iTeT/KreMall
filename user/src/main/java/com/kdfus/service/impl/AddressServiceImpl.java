@@ -1,7 +1,6 @@
 package com.kdfus.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -14,42 +13,42 @@ import com.kdfus.service.AddressService;
 import com.kdfus.system.ServiceResultEnum;
 import com.kdfus.util.NumberUtils;
 import com.kdfus.util.TokenUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.servlet.http.HttpServletRequest;
-
-import java.util.concurrent.TimeUnit;
-
-import static com.kdfus.system.RedisConstants.*;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Cra2iTeT
  * @date 2022/7/18 15:53
  */
 @Service("Address")
+@Slf4j
 public class AddressServiceImpl extends ServiceImpl<AddressMapper, Address> implements AddressService {
+
     @Autowired
-    private StringRedisTemplate stringRedisTemplate;
+    private TokenUtils tokenUtils;
 
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public String save(String token, AddressDTO addressDTO) {
+        UserVO userVO = tokenUtils.verify(token);
+
         Address address = BeanUtil.copyProperties(addressDTO, Address.class);
         address.setId(NumberUtils.genId());
-        UserVO userVO = TokenUtils.verify(token, stringRedisTemplate);
-        // 添加默认地址
+        address.setUserId(userVO.getId());
+
         if (address.getIsDefault().intValue() == 1) {
-            // 删除原默认地址
             LambdaUpdateWrapper<Address> wrapper = new LambdaUpdateWrapper<>();
-            wrapper.set(Address::getIsDefault, (byte) 0).eq(Address::getIsDefault, (byte) 1).last("for update");
+            wrapper.set(Address::getIsDefault, (byte) 0).eq(Address::getIsDefault, (byte) 1)
+                    .eq(Address::getUserId, userVO.getId()).last("for update");
             if (!update(wrapper)) {
                 return ServiceResultEnum.UPDATE_ERROR.getResult();
             }
-            stringRedisTemplate.delete(USER_ADDRESS_DEFAULT_KEY + userVO.getAccountId());
         }
         if (save(address)) {
             return null;
@@ -60,16 +59,15 @@ public class AddressServiceImpl extends ServiceImpl<AddressMapper, Address> impl
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public String update(String token, Long id) {
-        UserVO userVO = TokenUtils.verify(token, stringRedisTemplate);
-        // 修改原默认地址
+        UserVO userVO = tokenUtils.verify(token);
         LambdaUpdateWrapper<Address> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.set(Address::getIsDefault, (byte) 0).eq(Address::getIsDefault, (byte) 1).last("for update");
+        wrapper.set(Address::getIsDefault, (byte) 0).eq(Address::getIsDefault, (byte) 1)
+                .eq(Address::getUserId, userVO.getId()).last("for update");
         if (!update(wrapper)) {
             return ServiceResultEnum.UPDATE_ERROR.getResult();
         }
-        stringRedisTemplate.delete(USER_ADDRESS_DEFAULT_KEY + userVO.getAccountId());
         wrapper.clear();
-        wrapper.set(Address::getIsDefault, (byte) 1).eq(Address::getId, id);
+        wrapper.set(Address::getIsDefault, (byte) 1).eq(Address::getId, id).eq(Address::getId, id);
         if (!update(wrapper)) {
             return ServiceResultEnum.UPDATE_ERROR.getResult();
         }
@@ -77,8 +75,31 @@ public class AddressServiceImpl extends ServiceImpl<AddressMapper, Address> impl
     }
 
     @Override
+    public List<AddressVO> getList(String token) {
+        UserVO userVO = tokenUtils.verify(token);
+        LambdaQueryWrapper<Address> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Address::getIsDefault, (byte) 0).eq(Address::getIsDeleted, (byte) 0)
+                .eq(Address::getUserId, userVO.getId());
+        List<Address> addressList = list(wrapper);
+        if (addressList.size() != 0) {
+            return addressList.stream().
+                    map(item -> BeanUtil.copyProperties(item, AddressVO.class)).toList();
+        }
+        return null;
+    }
+
+    @Override
+    public String delete(Long id) {
+        LambdaUpdateWrapper<Address> wrapper = new LambdaUpdateWrapper<>();
+        wrapper.set(Address::getIsDeleted, (byte) 1).eq(Address::getId, id);
+        if (update(wrapper)) {
+            return null;
+        }
+        return ServiceResultEnum.OPERATE_ERROR.getResult();
+    }
+
+    @Override
     public String update(String token, AddressDTO addressDTO) {
-        UserVO userVO = new UserVO();
         LambdaUpdateWrapper<Address> wrapper = new LambdaUpdateWrapper<>();
         Address address = BeanUtil.copyProperties(addressDTO, Address.class);
         wrapper.set(address.getName() != null, Address::getName, addressDTO.getName())
@@ -89,7 +110,6 @@ public class AddressServiceImpl extends ServiceImpl<AddressMapper, Address> impl
                 .set(address.getDetail() != null, Address::getDetail, address.getDetail())
                 .eq(Address::getId, address.getId());
         if (update(wrapper)) {
-            stringRedisTemplate.delete(USER_ADDRESS_USUAL_KEY + userVO.getAccountId() + ":" + address.getId());
             return null;
         }
         return ServiceResultEnum.OPERATE_ERROR.getResult();
@@ -97,19 +117,12 @@ public class AddressServiceImpl extends ServiceImpl<AddressMapper, Address> impl
 
     @Override
     public AddressVO getDefault(String token) {
-        UserVO userVO = TokenUtils.verify(token, stringRedisTemplate);
-        String addressVOJson = stringRedisTemplate.opsForValue().get(USER_ADDRESS_DEFAULT_KEY + userVO.getAccountId());
-        if (addressVOJson != null) {
-            AddressVO addressVO = JSON.parseObject(addressVOJson, AddressVO.class);
-            return addressVO;
-        }
+        UserVO userVO = tokenUtils.verify(token);
         LambdaQueryWrapper<Address> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Address::getIsDefault, (byte) 0);
+        wrapper.eq(Address::getIsDefault, (byte) 1).eq(Address::getIsDeleted, (byte) 0)
+                .eq(Address::getUserId, userVO.getId());
         Address address = getOne(wrapper);
         if (address != null) {
-            AddressVO addressVO = BeanUtil.copyProperties(address, AddressVO.class);
-            stringRedisTemplate.opsForValue().set(USER_ADDRESS_DEFAULT_KEY + userVO.getAccountId(),
-                    JSON.toJSONString(userVO), USER_ADDRESS_DEFAULT_TTL, TimeUnit.MINUTES);
             return BeanUtil.copyProperties(address, AddressVO.class);
         }
         return null;

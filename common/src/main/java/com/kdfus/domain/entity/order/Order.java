@@ -22,7 +22,7 @@ public class Order {
 
     private Long merchantId;
 
-    private Long commodityId;
+    private Long addressId;
 
     private Long goodsId;
 
