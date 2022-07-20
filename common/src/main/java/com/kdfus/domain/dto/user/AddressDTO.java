@@ -16,11 +16,13 @@ public class AddressDTO {
 
     private Byte isDefault;
 
-    private String province;
+    private Long provinceId;
 
-    private String city;
+    private Long cityId;
 
-    private String region;
+    private Long regionId;
+
+    private Long streetId;
 
     private String detail;
 

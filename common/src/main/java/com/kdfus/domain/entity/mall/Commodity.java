@@ -1,4 +1,4 @@
-package com.kdfus.domain.entity.commodity;
+package com.kdfus.domain.entity.mall;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;

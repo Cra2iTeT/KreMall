@@ -1,4 +1,4 @@
-package com.kdfus.domain.entity.shop;
+package com.kdfus.domain.entity.map;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -8,23 +8,24 @@ import java.util.Date;
 
 /**
  * @author Cra2iTeT
- * @date 2022/6/20 20:16
+ * @date 2022/7/20 20:08
  */
-
 @Data
-public class Merchant {
+public class City {
     private Long id;
 
-    private String accountId;
-
-    private String nickName;
-
-    private String passwordMd5;
+    private String name;
 
     private Byte isDeleted;
 
-    private Long shopId;
-
     @TableField(fill = FieldFill.INSERT)
     private Date createTime;
+
+    private Long createId;
+
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private Date updateTime;
+
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private Long updateId;
 }

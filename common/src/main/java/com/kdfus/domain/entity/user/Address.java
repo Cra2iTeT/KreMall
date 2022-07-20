@@ -2,7 +2,6 @@ package com.kdfus.domain.entity.user;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.util.Date;
@@ -31,11 +30,13 @@ public class Address {
      */
     private Byte isDefault;
 
-    private String province;
+    private Long provinceId;
 
-    private String city;
+    private Long cityId;
 
-    private String region;
+    private Long regionId;
+
+    private Long streetId;
 
     private String detail;
 

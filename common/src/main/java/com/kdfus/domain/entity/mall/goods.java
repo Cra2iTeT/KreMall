@@ -1,4 +1,4 @@
-package com.kdfus.domain.entity.commodity;
+package com.kdfus.domain.entity.mall;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
@@ -7,25 +7,36 @@ import java.util.Date;
 
 /**
  * @author Cra2iTeT
- * @version 1.0
- * @date 2022/6/20 20:27
+ * @date 2022/6/20 20:32
  */
 
+/**
+ * 具体规格的单品
+ * 例如80码红色的ANTA Cra2iTeT签名战靴
+ */
 @Data
-public class Category {
+public class goods {
+
     private Long id;
 
-    private Byte level;
+    private Long commodityId;
 
     /**
-     * 父级id
-     * 默认0
+     * 单品图片
      */
-    private Long parentId;
+    private String goodsImg;
 
-    private String name;
+    private Integer price;
 
-    private Byte rank;
+    /**
+     * 规格一
+     */
+    private Long normOne;
+
+    /**
+     * 规格二
+     */
+    private Long normTwo;
 
     private Byte isDeleted;
 

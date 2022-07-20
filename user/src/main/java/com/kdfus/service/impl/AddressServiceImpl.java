@@ -9,7 +9,7 @@ import com.kdfus.domain.entity.user.Address;
 import com.kdfus.domain.vo.user.AddressVO;
 import com.kdfus.domain.vo.user.UserVO;
 import com.kdfus.mapper.AddressMapper;
-import com.kdfus.service.AddressService;
+import com.kdfus.service.*;
 import com.kdfus.system.ServiceResultEnum;
 import com.kdfus.util.NumberUtils;
 import com.kdfus.util.TokenUtils;
@@ -31,6 +31,18 @@ public class AddressServiceImpl extends ServiceImpl<AddressMapper, Address> impl
 
     @Autowired
     private TokenUtils tokenUtils;
+
+    @Autowired
+    private ProvinceService provinceService;
+
+    @Autowired
+    private CityService cityService;
+
+    @Autowired
+    private RegionService regionService;
+
+    @Autowired
+    private StreetService streetService;
 
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
@@ -66,7 +78,7 @@ public class AddressServiceImpl extends ServiceImpl<AddressMapper, Address> impl
             return ServiceResultEnum.UPDATE_ERROR.getResult();
         }
         wrapper.clear();
-        wrapper.set(Address::getIsDefault, (byte) 1).eq(Address::getId, id).eq(Address::getId, id);
+        wrapper.set(Address::getIsDefault, (byte) 1).eq(Address::getId, id);
         if (!update(wrapper)) {
             return ServiceResultEnum.UPDATE_ERROR.getResult();
         }
@@ -82,7 +94,14 @@ public class AddressServiceImpl extends ServiceImpl<AddressMapper, Address> impl
         List<Address> addressList = list(wrapper);
         if (addressList.size() != 0) {
             return addressList.stream()
-                    .map(item -> BeanUtil.copyProperties(item, AddressVO.class)).toList();
+                    .map(item -> {
+                        AddressVO addressVO = BeanUtil.copyProperties(item, AddressVO.class);
+                        addressVO.setProvince(provinceService.getProvince(item.getProvinceId()).getName());
+                        addressVO.setCity(cityService.getCity(item.getCityId()).getName());
+                        addressVO.setRegion(regionService.getRegion(item.getRegionId()).getName());
+                        addressVO.setStreet(streetService.getStreet(item.getStreetId()).getName());
+                        return addressVO;
+                    }).toList();
         }
         return null;
     }
@@ -103,9 +122,10 @@ public class AddressServiceImpl extends ServiceImpl<AddressMapper, Address> impl
         Address address = BeanUtil.copyProperties(addressDTO, Address.class);
         wrapper.set(address.getName() != null, Address::getName, addressDTO.getName())
                 .set(address.getPhone() != null, Address::getPhone, address.getPhone())
-                .set(address.getProvince() != null, Address::getProvince, address.getProvince())
-                .set(address.getCity() != null, Address::getCity, address.getCity())
-                .set(address.getRegion() != null, Address::getRegion, address.getRegion())
+                .set(address.getProvinceId() != null, Address::getProvinceId, address.getProvinceId())
+                .set(address.getCityId() != null, Address::getCityId, address.getCityId())
+                .set(address.getRegionId() != null, Address::getRegionId, address.getRegionId())
+                .set(address.getStreetId() != null, Address::getStreetId, address.getStreetId())
                 .set(address.getDetail() != null, Address::getDetail, address.getDetail())
                 .eq(Address::getId, address.getId());
         if (update(wrapper)) {

@@ -1,4 +1,4 @@
-package com.kdfus.domain.entity.commodity;
+package com.kdfus.domain.entity.mall;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
@@ -22,7 +22,7 @@ public class Norm {
 
     private Long commodityId;
 
-    private Long merchantId;
+    private Long shopId;
 
     private Byte isDeleted;
 

@@ -22,5 +22,7 @@ public class AddressVO {
 
     private String region;
 
+    private String street;
+
     private String detail;
 }

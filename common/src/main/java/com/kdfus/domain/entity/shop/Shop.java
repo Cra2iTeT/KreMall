@@ -1,5 +1,7 @@
 package com.kdfus.domain.entity.shop;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Data;
 
 import java.util.Date;
@@ -16,7 +18,7 @@ public class Shop {
 
     private String name;
 
-    private String merchantImg;
+    private String logo;
 
     private Byte isDeleted;
 
@@ -24,7 +26,9 @@ public class Shop {
 
     private Integer fansNum;
 
-    private String merchantLocation;
+    private Long shopProvinceId;
+
+    private Long shopCityId;
 
     private Integer goodsScore;
 
@@ -32,7 +36,9 @@ public class Shop {
 
     private Integer logisticsScore;
 
+    @TableField(fill = FieldFill.INSERT)
     private Date createTime;
 
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private Date updateTime;
 }
