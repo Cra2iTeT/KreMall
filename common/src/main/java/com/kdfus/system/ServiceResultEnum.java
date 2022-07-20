@@ -15,7 +15,7 @@ public enum ServiceResultEnum {
 
     UPDATE_ERROR("修改失败"),
 
-    DATE_NULL("数据空"),
+    DATA_NULL("数据空"),
 
     PASSWORD_DIFFERENT("两次密码不一致！"),
 

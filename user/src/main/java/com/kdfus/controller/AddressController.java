@@ -88,7 +88,7 @@ public class AddressController {
             return ResultGenerator.genSuccessResult(addressVO);
         }
         // 说明没有默认地址，前端这个情形应该是在下单的时候，显示为空就行，提醒用户填收货地址，不需要弹出错误信息
-        return ResultGenerator.genFailResult(ServiceResultEnum.DATE_NULL.getResult());
+        return ResultGenerator.genFailResult(ServiceResultEnum.DATA_NULL.getResult());
     }
 
     /**
@@ -103,7 +103,7 @@ public class AddressController {
         if (addressVOList != null) {
             return ResultGenerator.genSuccessResult(addressVOList);
         }
-        return ResultGenerator.genFailResult(ServiceResultEnum.DATE_NULL.getResult());
+        return ResultGenerator.genFailResult(ServiceResultEnum.DATA_NULL.getResult());
     }
 
     /**

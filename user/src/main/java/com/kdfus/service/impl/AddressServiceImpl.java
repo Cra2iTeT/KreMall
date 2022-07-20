@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author Cra2iTeT
@@ -36,7 +35,7 @@ public class AddressServiceImpl extends ServiceImpl<AddressMapper, Address> impl
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public String save(String token, AddressDTO addressDTO) {
-        UserVO userVO = tokenUtils.verify(token);
+        UserVO userVO = tokenUtils.verifyUser(token);
 
         Address address = BeanUtil.copyProperties(addressDTO, Address.class);
         address.setId(NumberUtils.genId());
@@ -59,7 +58,7 @@ public class AddressServiceImpl extends ServiceImpl<AddressMapper, Address> impl
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public String update(String token, Long id) {
-        UserVO userVO = tokenUtils.verify(token);
+        UserVO userVO = tokenUtils.verifyUser(token);
         LambdaUpdateWrapper<Address> wrapper = new LambdaUpdateWrapper<>();
         wrapper.set(Address::getIsDefault, (byte) 0).eq(Address::getIsDefault, (byte) 1)
                 .eq(Address::getUserId, userVO.getId()).last("for update");
@@ -76,14 +75,14 @@ public class AddressServiceImpl extends ServiceImpl<AddressMapper, Address> impl
 
     @Override
     public List<AddressVO> getList(String token) {
-        UserVO userVO = tokenUtils.verify(token);
+        UserVO userVO = tokenUtils.verifyUser(token);
         LambdaQueryWrapper<Address> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Address::getIsDefault, (byte) 0).eq(Address::getIsDeleted, (byte) 0)
                 .eq(Address::getUserId, userVO.getId());
         List<Address> addressList = list(wrapper);
         if (addressList.size() != 0) {
-            return addressList.stream().
-                    map(item -> BeanUtil.copyProperties(item, AddressVO.class)).toList();
+            return addressList.stream()
+                    .map(item -> BeanUtil.copyProperties(item, AddressVO.class)).toList();
         }
         return null;
     }
@@ -117,7 +116,7 @@ public class AddressServiceImpl extends ServiceImpl<AddressMapper, Address> impl
 
     @Override
     public AddressVO getDefault(String token) {
-        UserVO userVO = tokenUtils.verify(token);
+        UserVO userVO = tokenUtils.verifyUser(token);
         LambdaQueryWrapper<Address> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Address::getIsDefault, (byte) 1).eq(Address::getIsDeleted, (byte) 0)
                 .eq(Address::getUserId, userVO.getId());

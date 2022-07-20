@@ -23,6 +23,4 @@ public class AddressVO {
     private String region;
 
     private String detail;
-
-    private Byte isDeleted;
 }

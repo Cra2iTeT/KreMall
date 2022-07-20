@@ -6,13 +6,13 @@ import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.kdfus.system.ServiceResultEnum;
 import com.kdfus.domain.dto.LoginDTO;
 import com.kdfus.domain.dto.RegistryDTO;
 import com.kdfus.domain.entity.user.User;
 import com.kdfus.domain.vo.user.UserVO;
 import com.kdfus.mapper.UserMapper;
 import com.kdfus.service.UserService;
+import com.kdfus.system.ServiceResultEnum;
 import com.kdfus.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +22,6 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -97,7 +96,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public Boolean logout(String token) {
-        UserVO userVO = tokenUtils.verify(token);
+        UserVO userVO = tokenUtils.verifyUser(token);
         return Boolean.TRUE.equals(stringRedisTemplate.delete(LOGIN_USER_TOKEN_KEY + token))
                 && Boolean.TRUE.equals(stringRedisTemplate.delete(LOGIN_USER_MAPPING_KEY
                 + userVO.getAccountId() + ":" + token));
@@ -143,7 +142,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public String update(String token, String nickName) {
-        UserVO userVO = tokenUtils.verify(token);
+        UserVO userVO = tokenUtils.verifyUser(token);
         String key = LOGIN_USER_TOKEN_KEY + token;
         userVO.setNickName(nickName);
 
@@ -173,7 +172,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return ServiceResultEnum.PASSWORD_DIFFERENT.getResult();
         }
 
-        UserVO userVO = tokenUtils.verify(token);
+        UserVO userVO = tokenUtils.verifyUser(token);
 
         LambdaUpdateWrapper<User> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(User::getId, userVO.getId()).eq(User::getIsDeleted, (byte) 0)
@@ -195,7 +194,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public String update(String token, MultipartFile file) {
-        UserVO userVO = tokenUtils.verify(token);
+        UserVO userVO = tokenUtils.verifyUser(token);
 
         String uploadResult = UploadUtils.uploadFile(file, FILE_USER_UPLOAD_DIC + userVO.getAccountId() + "\\");
         if (uploadResult != null) {
@@ -212,7 +211,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public String getInfo(String token) {
-        return JSON.toJSONString(tokenUtils.verify(token));
+        return JSON.toJSONString(tokenUtils.verifyUser(token));
     }
 
 }

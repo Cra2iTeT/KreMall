@@ -2,11 +2,11 @@ package com.kdfus.domain.entity.user;
 
 /**
  * @author Cra2iTeT
- * @version 1.0
  * @date 2022/5/31 21:09
  */
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Data;
 
 import java.util.Date;
@@ -40,9 +40,9 @@ public class ShoppingCart {
 
     private Byte isDeleted;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @TableField(fill = FieldFill.INSERT)
     private Date createTime;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private Date updateTime;
 }
